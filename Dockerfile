@@ -1,35 +1,41 @@
-# 1. Сборка приложения
+# BUILD STAGE
 FROM node:20-alpine AS builder
 
-# Рабочая директория
 WORKDIR /app
 
-# Копируем файлы зависимостей
+# Копируем конфиги зависимостей
 COPY package*.json ./
+COPY prisma ./prisma/
+# Важно: копируем конфиг призмы, так как он нужен для generate
+COPY prisma.config.ts ./
 
-# Устанавливаем зависимости (включая dev для сборки)
 RUN npm ci
 
-# Копируем исходный код
+# Генерируем клиент (теперь он найдет конфиг)
+RUN npx prisma generate
+
+# Копируем весь остальной исходный код
 COPY . .
 
-# Собираем TypeScript в JavaScript (папка dist)
 RUN npm run build
 
-# 2. Финальный образ (Production)
-FROM node:20-alpine AS production
+# PRODUCTION STAGE
+FROM node:20-alpine
 
 WORKDIR /app
+RUN apk add --no-cache openssl
 
-# Устанавливаем только prod-зависимости для уменьшения веса
 COPY package*.json ./
+COPY prisma ./prisma/
+COPY prisma.config.ts ./
+
+# Ставим только прод-зависимости
 RUN npm ci --only=production
 
-# Копируем собранное приложение из builder
+# Генерируем клиент снова для чистого образа
+RUN npx prisma generate
+
 COPY --from=builder /app/dist ./dist
 
-# Указываем порт (Dokploy будет мапить его)
 EXPOSE 3000
-
-# Запуск
 CMD ["node", "dist/main"]

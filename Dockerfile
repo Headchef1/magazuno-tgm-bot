@@ -6,12 +6,12 @@ WORKDIR /app
 # Копируем конфиги зависимостей
 COPY package*.json ./
 COPY prisma ./prisma/
-# Важно: копируем конфиг призмы, так как он нужен для generate
 COPY prisma.config.ts ./
 
 RUN npm ci
 
-# Генерируем клиент (теперь он найдет конфиг)
+# ! ВАЖНО: Добавляем фейковый URL для сборки, чтобы prisma generate не падал
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
 
 # Копируем весь остальной исходный код
@@ -32,7 +32,8 @@ COPY prisma.config.ts ./
 # Ставим только прод-зависимости
 RUN npm ci --only=production
 
-# Генерируем клиент снова для чистого образа
+# ! ВАЖНО: Тут тоже добавляем фейк для генерации
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
 
 COPY --from=builder /app/dist ./dist

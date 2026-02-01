@@ -6,6 +6,9 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
+  // Убираем конструктор вообще, пусть использует дефолтный
+  // constructor() { super(...) } <-- Удалить
+
   async onModuleInit() {
     await this.$connect();
   }

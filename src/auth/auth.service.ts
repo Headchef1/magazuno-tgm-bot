@@ -59,7 +59,7 @@ export class AuthService {
     );
 
     // 3. Генерируем JWT (Payload: sub=UUID, tg_id=TelegramID, role=Role)
-    const payload = { sub: user.id, tg_id: user.telegram_id, role: user.role };
+    const payload = { sub: user.id, tg_id: user.telegramId, role: user.role };
 
     return {
       access_token: this.jwtService.sign(payload),
